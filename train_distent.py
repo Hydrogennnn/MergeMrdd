@@ -20,6 +20,7 @@ from utils.datatool import (get_val_transformations,
                             get_mask_val,
                             add_sp_noise)
 from utils.misc import reproducibility_setting
+from utils.misc import get_alpha_scheduler
 LOCAL_RANK = int(os.getenv('LOCAL_RANK', -1))
 RANK = int(os.getenv('RANK', -1))
 WORLD_SIZE = int(os.getenv('WORLD_SIZE', 1))
@@ -123,6 +124,7 @@ def get_scheduler(args, optimizer):
     return scheduler
 
 
+
 # Only print on main device
 def smartprint(*msg):
     if LOCAL_RANK == 0 or LOCAL_RANK == -1:
@@ -137,7 +139,7 @@ if __name__ == '__main__':
     use_wandb = config.wandb
     seed = config.seed
     result_dir = os.path.join(config.train.log_dir,
-                              f'{config.experiment_name}-disent-v{config.vspecific.v_dim}-c{config.consistency.c_dim}-m{config.train.masked_ratio}-mv{config.train.mask_view_ratio if config.train.mask_view else 0.0}-{seed}')
+                              f'{config.experiment_name}-Sch-v{config.vspecific.v_dim}-c{config.consistency.c_dim}-m{config.train.masked_ratio}-mv{config.train.mask_view_ratio if config.train.mask_view else 0.0}-{seed}')
     os.makedirs(result_dir, exist_ok=True)
 
     if use_ddp:
@@ -177,7 +179,7 @@ if __name__ == '__main__':
     if use_wandb:
         wandb.init(project=config.project_name,
                 config=config,
-                name=f'{config.experiment_name}-MergeMrdd-c{config.consistency.c_dim}--v{config.vspecific.v_dim}-m{config.train.masked_ratio}-mv{config.train.mask_view_ratio if config.train.mask_view else 0.0}-{seed}')
+                name=f'{config.experiment_name}-Sch-c{config.consistency.c_dim}--v{config.vspecific.v_dim}-m{config.train.masked_ratio}-mv{config.train.mask_view_ratio if config.train.mask_view else 0.0}-{seed}')
     summary(model)
     smartprint('model loaded!')
     if LOCAL_RANK == 0 or LOCAL_RANK == -1:
@@ -216,6 +218,7 @@ if __name__ == '__main__':
 
     for epoch in range(config.train.epochs):
         lr = optimizer.param_groups[0]['lr']
+        alpha = get_alpha_scheduler(epoch, config.train.epochs, baseValue=0.0001, maxValue=1)
         # wandb.log({'lr':lr}, step=epoch)
         smartprint("lr:" + str(lr))
 
@@ -230,9 +233,9 @@ if __name__ == '__main__':
         for Xs, _ in tqdm(train_loader):
             Xs = [x.to(device) for x in Xs]
             if use_ddp:
-                loss, details = model.module.get_loss(Xs)
+                loss, details = model.module.get_loss(Xs, alpha)
             else:
-                loss, details = model.get_loss(Xs)
+                loss, details = model.get_loss(Xs, alpha)
 
             optimizer.zero_grad()
             loss.backward()

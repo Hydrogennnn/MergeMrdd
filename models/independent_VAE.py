@@ -11,7 +11,7 @@ class IVAE(nn.Module):
         self.views = args.views
         # m unimodal vae
         for i in range(self.args.views):
-            self.__setattr__(f"venc_{i + 1}", ViewSpecificAE(c_enable=True,
+            self.__setattr__(f"venc_{i + 1}", ViewSpecificAE(c_enable=False,
                                                              v_dim=self.args.vspecific.v_dim,
                                                              latent_ch=self.args.vspecific.latent_ch,
                                                              num_res_blocks=self.args.vspecific.num_res_blocks,
@@ -32,7 +32,7 @@ class IVAE(nn.Module):
 
         return outs
 
-    def get_loss(self, Xs, C):
+    def get_loss(self, Xs, C=None):
         return_details = {}
         loss = 0.
         for i in range(self.views):
@@ -44,6 +44,8 @@ class IVAE(nn.Module):
 
             loss += kld_loss + recon_loss
             return_details[f"v{i+1}_total-loss"] = loss.item()
+
+        return_details['ivae_total_loss'] = loss.item()
         return loss, return_details
 
     def vspecific_features(self, Xs, best_view=False):

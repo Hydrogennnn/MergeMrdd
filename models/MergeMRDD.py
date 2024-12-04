@@ -47,23 +47,22 @@ class MMRDD(nn.Module):
                                                 self.c_dim,
                                                 config.disent.hidden_size) for _ in range(self.views)])
 
-    def get_loss(self, Xs):
+    def get_loss(self, Xs, alpha):
         # extract specific-views
         assert len(Xs) == self.views
         return_details = {}
         # kld loss & reconstruction loss
 
-        cons_kld_loss = self.cons_enc.get_loss(Xs=Xs,
+        cons_loss, cons_return_details = self.cons_enc.get_loss(Xs=Xs,
                                                       mask_ratio=self.config.train.masked_ratio,
                                                       mask_patch_size=self.config.train.mask_patch_size,
                                                       _mask_view=self.config.train.mask_view,
                                                       mask_view_ratio=self.config.train.mask_view_ratio
                                                       )
+        return_details.update(cons_return_details)
         C = self.cons_enc.consistency_features(Xs)
-        return_details['cons_kld_loss'] = cons_kld_loss.item()
-        # return_details['cons_recon_loss'] = cons_recon_loss.item()
 
-        spe_loss, spe_loss_details = self.spe_enc.get_loss(Xs, C)
+        spe_loss, spe_loss_details = self.spe_enc.get_loss(Xs)
         return_details.update(spe_loss_details)
         spe_repr = self.spe_enc.vspecific_features(Xs)
         # MI loss
@@ -77,8 +76,9 @@ class MMRDD(nn.Module):
             tot_disent_loss += cur_disent_loss
 
         return_details['disent_loss'] = tot_disent_loss.item()
+        return_details['total_loss'] = (alpha*cons_loss + (1-alpha)*(spe_loss + tot_disent_loss)).item()
 
-        return cons_kld_loss + spe_loss + tot_disent_loss, return_details
+        return (1-alpha)*cons_loss + alpha*(spe_loss + tot_disent_loss), return_details
 
     def forward(self, Xs):
         con_repr = self.cons_enc(Xs)

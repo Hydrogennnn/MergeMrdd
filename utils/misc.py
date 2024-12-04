@@ -134,3 +134,5 @@ def get_masked_value(current_epoch, start_epoch=0, end_epoch=100, start_value=0.
     value = (ratio * (end_value - start_value)) + start_value
     return value
 
+def get_alpha_scheduler(epoch, total_epochs, baseValue, maxValue):
+    return baseValue+(maxValue-baseValue)*epoch//total_epochs

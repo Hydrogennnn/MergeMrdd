@@ -197,9 +197,9 @@ if __name__ == '__main__':
             Xs = [x.to(device) for x in Xs]
             # assert use_ddp == True
             if use_ddp:
-                loss, details = model.module.get_loss(Xs, config.train.masked_ratio, config.train.mask_patch_size)
+                loss, details = model.module.get_loss(Xs)
             else:
-                loss, details = model.get_loss(Xs, config.train.masked_ratio, config.train.mask_patch_size)
+                loss, details = model.get_loss(Xs)
 
             optimizer.zero_grad()
             loss.backward()
