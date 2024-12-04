@@ -177,7 +177,7 @@ if __name__ == '__main__':
     if use_wandb:
         wandb.init(project=config.project_name,
                 config=config,
-                name=f'{config.experiment_name}-rmrdd-c{config.consistency.c_dim}--v{config.vspecific.v_dim}-m{config.train.masked_ratio}-mv{config.train.mask_view_ratio if config.train.mask_view else 0.0}-{seed}')
+                name=f'{config.experiment_name}-MergeMrdd-c{config.consistency.c_dim}--v{config.vspecific.v_dim}-m{config.train.masked_ratio}-mv{config.train.mask_view_ratio if config.train.mask_view else 0.0}-{seed}')
     summary(model)
     smartprint('model loaded!')
     if LOCAL_RANK == 0 or LOCAL_RANK == -1:
