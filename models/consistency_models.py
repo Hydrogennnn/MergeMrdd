@@ -55,7 +55,7 @@ class ConsistencyAE(nn.Module):
         self.alpha = alpha
         
         
-        self._encoder = nn.ModuleList([Encoder(hidden_dim=self.basic_hidden_dim,
+        self._encoder = Encoder(hidden_dim=self.basic_hidden_dim,
                                 in_channels=self.in_channel,
                                 z_channels=self.latent_ch,
                                 ch_mult=self.ch_mult,
@@ -63,7 +63,7 @@ class ConsistencyAE(nn.Module):
                                 resolution=1,
                                 use_attn=False,
                                 attn_resolutions=None,
-                                double_z=False) for _ in range(self.views)])
+                                double_z=False)
         # self._encoder = resnet18(pretrained=False, in_channel=self.in_channel, output_layer=6)
     
         self.decoders = nn.ModuleList([Decoder(hidden_dim=self.basic_hidden_dim,
@@ -91,8 +91,6 @@ class ConsistencyAE(nn.Module):
         #     # discrete code.
         #     self.fc_z = nn.Linear(self.latent_ch * self.block_size ** 2, self.c_dim * self.categorical_dim)
         #     self.to_decoder_input = nn.Linear(self.c_dim * self.categorical_dim, self.latent_ch * self.block_size **2)
-        self.gates = nn.Linear(512 * self.views, self.views)
-        self.experts = nn.ModuleList([nn.Linear(512, self.c_dim * 2) for _ in range(self.views)])
         
     def forward(self, Xs):
     
@@ -148,7 +146,7 @@ class ConsistencyAE(nn.Module):
         """
         latents = []
         for i, x in enumerate(Xs):
-            latent = self._encoder[i](x) # z x 78 x 78
+            latent = self._encoder(x) # z x 78 x 78
             latent = torch.flatten(latent, start_dim=1) # z x 554
             # expert_output.append(self.experts[i](latent)) #[(b,2c)....]
             latents.append(latent)
