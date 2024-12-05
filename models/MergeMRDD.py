@@ -62,7 +62,7 @@ class MMRDD(nn.Module):
         return_details.update(cons_return_details)
         C = self.cons_enc.consistency_features(Xs)
 
-        spe_loss, spe_loss_details = self.spe_enc.get_loss(Xs)
+        spe_loss, spe_loss_details = self.spe_enc.get_loss(Xs, C)
         return_details.update(spe_loss_details)
         spe_repr = self.spe_enc.vspecific_features(Xs)
         # MI loss
