@@ -15,7 +15,7 @@ import numpy as np
 import wandb
 from scipy.optimize import linear_sum_assignment
 from configs.basic_cfg import get_cfg
-from models.Reverse_MRDD import RMRDD
+from models.MergeMRDD import MMRDD
 from sklearn import metrics
 from utils.datatool import (get_val_transformations,
                             add_sp_noise,
@@ -156,9 +156,8 @@ def main():
     need_classification = True
 
     model_path = config.eval.model_path
-    model = RMRDD(
+    model = MMRDD(
         config=config,
-        specific_encoder_path=config.vspecific.model_path,
         device=device
     )
     model.load_state_dict(torch.load(model_path, map_location='cpu'))
